@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="ISO-8859-1">
+    <title>WebGUI</title>
+</head>
+<body>
+	<h1>RasPi</h1>
+	<button id="butVersion">Version</button>
+	<p id="labVersion">?</p>
+	<input type="checkbox" id="led">LED<br>
+	<p id="button">Button Off</p>
+	<textarea id="log" rows="10" cols="30"></textarea>
+	
+	<div>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+    
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function(){
+            var obj=document.getElementById("log");
+            function log(msg) {
+                $('#log').append('\n' +msg);
+                obj.scrollTop=obj.scrollHeight;
+            }
+    
+            namespace = '/test'; // change to an empty string to use the global namespace
+            var url = 'http://' + document.domain + ':' + location.port + namespace;
+            $('#log').append(url);
+            var socket = io.connect(url);
+            
+            $('#butVersion').click(function() {
+                log("click");
+                socket.emit('getVersion');
+            }); 
+            
+            socket.on('setVersion', function(msg) {
+				log(msg.version);
+				$('#labVersion').text(msg.version);
+            });         
+            
+            socket.on('but', function(msg) {
+				str = msg.state ? "Button ON" : "Button OFF";
+				log(str);
+				$('#button').text(str);
+            });         
+            
+            $('#led').change(function() {
+                state = $(this).is(":checked");
+                log(state ? "LED ON" : "LED OFF");
+                socket.emit('ledRCtrl', {led: state});
+            }); 
+        });
+    </script>	
+	</div>
+</body>
+</html>
